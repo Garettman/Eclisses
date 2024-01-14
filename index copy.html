@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calcul de Protection</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <h2>Calculateur d'éclisses</h2>
+
+    <form id="plankForm"></form>
+      <label for="length">Longueur de la planche (en cm):</label>
+      <input type="tel" id="length" name="length" pattern="[0-9]*" inputmode="numeric" value="2020">
+      <br>
+      <label for="width">Largeur de la planche (en cm):</label>
+      <input type="tel" id="width" name="width" pattern="[0-9]*" inputmode="numeric" value="935">
+      <br>
+      <label for="quantity">Quantité de planches:</label>
+      <input type="tel" id="quantity" name="quantity" pattern="[0-9]*" inputmode="numeric" value="4">
+      <br>
+      <label for="type">Type:</label>
+      <select id="type" name="type">
+        <option value="Porte">Porte</option>
+        <option value="Jambe">Jambe</option>
+      </select>
+      <br>
+      <input type="button" value="Ajouter" onclick="addPlank()">
+    </form>
+
+    <table id="plankTable">
+      <tr>
+        <th>Longueur</th>
+        <th>Largeur</th>
+        <th>Quantité</th>
+        <th>Type</th>
+        <th>Nombre d'éclisses</th>
+        <th>Actions</th>
+      </tr>
+    </table>
+
+    <div id="resultsContainer"></div>
+
+  </main>
+
+  <script>
+    var planks = [];
+
+    function addPlank() {
+      var width = document.getElementById("width").value;
+      var length = document.getElementById("length").value;
+      var quantity = document.getElementById("quantity").value;
+      var type = document.getElementById("type").value;
+
+      var plank = {
+        width: width,
+        length: length,
+        quantity: quantity,
+        type: type
+      };
+
+      planks.push(plank);
+
+      var table = document.getElementById("plankTable");
+      var row = table.insertRow(-1);
+      row.id = "row-" + (planks.length - 1);
+      var widthCell = row.insertCell(0);
+      var lengthCell = row.insertCell(1);
+      var quantityCell = row.insertCell(2);
+      var typeCell = row.insertCell(3);
+      var packageCell = row.insertCell(4);
+      var actionsCell = row.insertCell(5);
+
+      widthCell.innerHTML = width + " mm";
+      lengthCell.innerHTML = length + " mm";
+      quantityCell.innerHTML = quantity + " pcs";
+      typeCell.innerHTML = type;
+      packageCell.innerHTML = Math.ceil(quantity * 6);
+      actionsCell.innerHTML = '<button onclick="editPlank(' + (planks.length - 1) + ')">Modifier</button>';
+
+      calculate();
+    }
+
+    function editPlank(index) {
+      var plank = planks[index];
+      var row = document.getElementById("row-" + index);
+      var cells = [row.cells[0], row.cells[1], row.cells[2]];
+      var properties = ['width', 'length', 'quantity'];
+      var inputs = [];
+
+      for (var i = 0; i < cells.length; i++) {
+        var input = document.createElement("input");
+        input.type = "tel";
+        input.pattern = "[0-9]*";
+        input.inputmode = "numeric";
+        input.value = plank[properties[i]];
+        input.size = input.value.length;
+        inputs.push(input);
+        cells[i].innerHTML = '';
+        cells[i].appendChild(input);
+      }
+
+      var modifyButton = document.createElement("button");
+      modifyButton.innerText = "Modifier";
+      modifyButton.onclick = function() { editPlank(index); };
+
+      var confirmButton = document.createElement("button");
+      confirmButton.innerText = "Confirmer";
+      confirmButton.onclick = function() {
+        for (var i = 0; i < inputs.length; i++) {
+          plank[properties[i]] = inputs[i].value;
+          cells[i].innerText = plank[properties[i]] + (i < 2 ? " mm" : " pcs");
+        }
+
+        var packageCell = row.cells[4];
+        var quantity = parseInt(plank['quantity']);
+        packageCell.innerHTML = Math.ceil(quantity * 6);
+
+        calculate();
+        row.cells[5].innerHTML = '';
+        row.cells[5].appendChild(modifyButton);
+      };
+
+      row.cells[5].innerHTML = '';
+      row.cells[5].appendChild(confirmButton);
+    }
+
+    function createSvg(plank, index) {
+      var rectWidth = plank.length / 10;
+      var rectHeight = plank.width / 10;
+
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", rectWidth + 100);
+      svg.setAttribute("height", rectHeight + 50);
+
+      var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("width", rectWidth);
+      rect.setAttribute("height", rectHeight);
+      rect.setAttribute("style", "fill:lightblue;stroke-width:3;stroke:rgb(0,0,0)");
+
+      svg.appendChild(rect);
+
+      var textWidth = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      textWidth.setAttribute("x", rectWidth / 2);
+      textWidth.setAttribute("y", rectHeight + 20);
+      textWidth.setAttribute("fill", "black");
+      textWidth.textContent = parseInt(plank.length) + " mm";
+
+      svg.appendChild(textWidth);
+
+      var textHeight = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      textHeight.setAttribute("x", rectWidth + 20);
+      textHeight.setAttribute("y", rectHeight / 2);
+      textHeight.setAttribute("fill", "black");
+      textHeight.textContent = parseInt(plank.width) + " mm";
+
+      svg.appendChild(textHeight);
+
+      return svg;
+    }
+
+    function calculateDoorPlank(plank) {
+      const L = 40;
+      const delta = 10;
+      const X_1 = 4 + L + delta;
+      const X_2 = 5.5 + L + delta;
+      const G_1 = 3 + L + delta;
+      const G_2 = 5.5 + L + delta;
+      const a = 1000;
+      const b = 250;
+
+      const d_1 = plank.width;
+      const d_2 = plank.length;
+
+      const Y1_length = d_1 - X_1 - X_2;
+      const Y2_length = d_2 - G_1 - G_2 - delta - a;
+      const Y3_length = d_2 - G_1 - G_2 - 2*delta - a - b;
+
+      const Y1_quantity = 2 * plank.quantity;
+      const Y2_quantity = plank.quantity;
+      const Y3_quantity = plank.quantity;
+
+      const totalEclisses = 6 * Number(plank.quantity);
+      const eclisseNormal = totalEclisses - Y1_quantity - Y2_quantity - Y3_quantity;
+
+      return { Y1_length, Y2_length, Y3_length, Y1_quantity, Y2_quantity, Y3_quantity, totalEclisses, eclisseNormal };
+    }
+
+    function calculateLegPlank(plank) {
+      const L = 40;
+      const delta = 10;
+      const X_1 = 4 + L + delta;
+      const X_2 = 5.5 + L + delta;
+      const G_1 = 3 + L + delta;
+      const G_2 = 5.5 + L + delta;
+      const a = 1000;
+
+      const d_1 = plank.length;
+      const d_2 = plank.width;
+
+      const Y1_length = d_1 - X_1 - X_2;
+      const Y2_length = d_2 - G_1 - G_2 - delta - a;
+
+      const Y1_quantity = 2 * plank.quantity;
+      const Y2_quantity = plank.quantity;
+
+      const totalEclisses = 4 * Number(plank.quantity);
+      const eclisseNormal = totalEclisses - Y1_quantity - Y2_quantity;
+
+      return { Y1_length, Y2_length, Y1_quantity, Y2_quantity, totalEclisses, eclisseNormal };
+    }
+
+    function calculate() {
+      var resultsContainer = document.getElementById("resultsContainer");
+      resultsContainer.innerHTML = '';
+
+      var table = document.getElementById("resultsTable");
+      if (!table) {
+        table = document.createElement("table");
+        table.id = "resultsTable";
+        resultsContainer.appendChild(table);
+      }
+
+      for (var i = 0; i < planks.length; i++) {
+  var plank = planks[i];
+  var svg = createSvg(plank, i);
+
+  var row = table.insertRow(-1);
+  row.insertCell(0).appendChild(svg);
+
+  var details;
+  if (plank.type === "Porte") {
+    details = calculateDoorPlank(plank);
+  } else if (plank.type === "Jambe") {
+    details = calculateLegPlank(plank);
+  }
+
+  // Créez une nouvelle table pour les éclisses
+  var eclisseTable = document.createElement("table");
+// Ajoutez une ligne d'en-tête à la table
+var headerRow = eclisseTable.insertRow(-1);
+headerRow.insertCell(0).innerHTML = "<strong> Type d'éclisse </strong>";
+headerRow.insertCell(1).innerHTML = "<strong> Quantité </strong>" ;
+headerRow.insertCell(2).innerHTML = "<strong>Longueur</strong>";
+
+  // Ajoutez les colonnes pour les types d'éclisses, quantité et longueur
+  var eclisseTypes = ["Toutes mélangées", "Y1", "Y2", "Y3", "Non touchées"];
+  var eclisseQuantities = [details.totalEclisses, details.Y1_quantity, details.Y2_quantity, details.Y3_quantity, details.eclisseNormal];
+  var eclisseLengths = ["-", details.Y1_length, details.Y2_length, details.Y3_length, "-"];
+
+  for (var j = 0; j < eclisseTypes.length; j++) {
+    
+    var eclisseRow = eclisseTable.insertRow(-1);
+    eclisseRow.insertCell(0).innerHTML = eclisseTypes[j];
+    eclisseRow.insertCell(1).innerHTML = eclisseQuantities[j];
+    eclisseRow.insertCell(2).innerHTML = eclisseLengths[j];
+  }
+
+  // Ajoutez la table d'éclisses à la deuxième cellule de la ligne
+  row.insertCell(1).appendChild(eclisseTable);
+}
+    }
+  </script>
+</body>
+</html>

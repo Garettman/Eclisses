@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Calculateur</h2>
+
+<form id="myForm">
+  d_1: <input type="number" id="d1" name="d1"><br><br>
+  d_2: <input type="number" id="d2" name="d2"><br><br>
+  <input type="button" value="Calculer" onclick="calculate()">
+</form>
+
+<p id="result"></p>
+
+<script>
+function calculate() {
+  const L = 40;
+  const delta = 10;
+  const X_1 = 4 + L + delta;
+  const X_2 = 5.5 + L + delta;
+  const G_1 = 3 + L + delta;
+  const G_2 = 5.5 + L + delta;
+  const a = 1000;
+  const b = 250;
+
+  const d_1 = document.getElementById('d1').value;
+  const d_2 = document.getElementById('d2').value;
+
+  const y_1 = d_1 - X_1 - X_2;
+  const y_2 = d_2 - G_1 - G_2 - delta - a;
+  const y_3 = d_2 - G_1 - G_2 - 2*delta - a - b;
+
+  document.getElementById('result').innerHTML = `y_1 = ${y_1}, y_2 = ${y_2}, y_3 = ${y_3}`;
+}
+</script>
+
+</body>
+</html>
