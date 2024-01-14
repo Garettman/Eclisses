@@ -18,7 +18,7 @@
       <input type="tel" id="width" name="width" pattern="[0-9]*" inputmode="numeric" value="935">
       <br>
       <label for="quantity">Quantité de planches:</label>
-      <input type="tel" id="quantity" name="quantity" pattern="[0-9]*" inputmode="numeric" value="4">
+      <input type="number" id="quantity" name="quantity" pattern="[0-9]*" inputmode="numeric" value="4">
       <br>
       <label for="type">Type:</label>
       <select id="type" name="type">
@@ -42,11 +42,21 @@
 
     <div id="resultsContainer"></div>
 
+    <form id="variablesForm">
+      <label for="L">Largeur éclisse:</label><br>
+      <input type="number" id="L" name="L" value="40"><br>
+      <label for="delta">Marge/Delta:</label><br>
+      <input type="number" id="delta" name="delta" value="10"><br>
+      <label for="a">Longueur eclisse normale (a):</label><br>
+      <input type="number" id="a" name="a" value="1000"><br>
+      <label for="b">Hauteur poignée porte (b):</label><br>
+      <input type="number" id="b" name="b" value="250"><br>
+    </form>    </form>
   </main>
 
   <script>
     var planks = [];
-
+   
     function addPlank() {
       var width = document.getElementById("width").value;
       var length = document.getElementById("length").value;
@@ -127,48 +137,103 @@
     }
 
     function createSvg(plank, index) {
-      var rectWidth = plank.length / 10;
-      var rectHeight = plank.width / 10;
+  var rectWidth = plank.length / 10;
+  var rectHeight = plank.width / 10;
 
-      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("width", rectWidth + 100);
-      svg.setAttribute("height", rectHeight + 50);
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", rectWidth + 100);
+  svg.setAttribute("height", rectHeight + 50);
 
-      var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      rect.setAttribute("width", rectWidth);
-      rect.setAttribute("height", rectHeight);
-      rect.setAttribute("style", "fill:lightblue;stroke-width:3;stroke:rgb(0,0,0)");
+  var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  rect.setAttribute("width", rectWidth);
+  rect.setAttribute("height", rectHeight);
+  rect.setAttribute("style", "fill:lightblue;stroke-width:3;stroke:rgb(0,0,0)");
 
-      svg.appendChild(rect);
+  svg.appendChild(rect);
 
-      var textWidth = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      textWidth.setAttribute("x", rectWidth / 2);
-      textWidth.setAttribute("y", rectHeight + 20);
-      textWidth.setAttribute("fill", "black");
-      textWidth.textContent = parseInt(plank.length) + " mm";
+  // Create a new SVG rectangle to represent the eclisse
+  function createEclisse(width, height, x, y, color) {
+  var eclisse = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  eclisse.setAttribute("width", width);
+  eclisse.setAttribute("height", height);
+  eclisse.setAttribute("x", x);
+  eclisse.setAttribute("y", y);
+  eclisse.setAttribute("style", "fill:"+color+";stroke-width:1;stroke:rgb(0,0,0)");
+  return eclisse;
+}
+  var details;
+  if (plank.type === "Porte") {
+    details = calculateDoorPlank(plank);
+  } else if (plank.type === "Jambe") {
+    details = calculateLegPlank(plank);
+  }
+  
+// Create 6 eclisses with different parameters
+for (var i = 0; i < 1; i++) {
+  var eclisse = createEclisse(details.L / 10, details.Y1_length / 10, (rectWidth-details.L/10), (rectHeight - details.Y1_length / 10) / 2, "red");
+  svg.appendChild(eclisse);
+};
+for (var i = 0; i < 1; i++) {
+  var eclisse = createEclisse(details.L / 10, details.Y1_length / 10, details.m2/10, (rectHeight - details.Y1_length / 10) / 2, "red");
+  svg.appendChild(eclisse);
+};
+for (var i = 0; i < 1; i++) {
+  var eclisse = createEclisse(details.a / 10, details.L / 10, details.m2/10+details.L/10+details.delta/10, details.m3/10, "gray");
+  svg.appendChild(eclisse);
+};
+for (var i = 0; i < 1; i++) {
+  var eclisse = createEclisse(details.a / 10, details.L / 10, details.m2/10+details.L/10+details.delta/10, rectHeight - details.L / 10 - details.m4/10, "gray");
+  svg.appendChild(eclisse);
+};
+for (var i = 0; i < 1; i++) {
+  var eclisse = createEclisse(details.Y2_length / 10, details.L / 10, details.a/10+details.m2/10+details.L/10+2*(details.delta/10), details.m3/10, "orange");
+  svg.appendChild(eclisse);
+};
 
-      svg.appendChild(textWidth);
+for (var i = 0; i < 1; i++) {
+  var eclisse = createEclisse(details.Y3_length / 10, details.L / 10, details.a/10+details.m2/10+details.L/10+(3*(details.delta/10))+(details.b/10), rectHeight - details.L / 10 - details.m4/10, "lightgreen");
+  svg.appendChild(eclisse);
+};
+  // Set the position of the rectangle to be at the center of the width of the plank
 
-      var textHeight = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      textHeight.setAttribute("x", rectWidth + 20);
-      textHeight.setAttribute("y", rectHeight / 2);
-      textHeight.setAttribute("fill", "black");
-      textHeight.textContent = parseInt(plank.width) + " mm";
+  svg.appendChild(eclisse);
 
-      svg.appendChild(textHeight);
+  var textWidth = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  textWidth.setAttribute("x", rectWidth / 2);
+  textWidth.setAttribute("y", rectHeight + 20);
+  textWidth.setAttribute("fill", "black");
+  textWidth.textContent = parseInt(plank.length) + " mm";
 
-      return svg;
-    }
+  svg.appendChild(textWidth);
 
+  var textHeight = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  textHeight.setAttribute("x", rectWidth + 20);
+  textHeight.setAttribute("y", rectHeight / 2);
+  textHeight.setAttribute("fill", "black");
+  textHeight.textContent = parseInt(plank.width) + " mm";
+
+  svg.appendChild(textHeight);
+
+  return svg;
+}
+function getVariables() {
+  const L = Number(document.getElementById('L').value);
+  const delta = Number(document.getElementById('delta').value);
+  const a = Number(document.getElementById('a').value);
+  const b = Number(document.getElementById('b').value);
+
+  return { L, delta, a, b /*, other variables */ };
+}
     function calculateDoorPlank(plank) {
-      const L = 40;
-      const delta = 10;
-      const X_1 = 4 + L + delta;
-      const X_2 = 5.5 + L + delta;
-      const G_1 = 3 + L + delta;
-      const G_2 = 5.5 + L + delta;
-      const a = 1000;
-      const b = 250;
+      const { L, delta, a, b } = getVariables();
+      const m1 = 4;
+      const m2 = 5.5;
+      const m3 = 3;
+      const m4 = 5.5;
+      const X_1 = m1 + L + delta;
+      const X_2 = m2 + L + delta;
+      const G_1 = m3 + L + delta;
+      const G_2 = m4 + L + delta;
 
       const d_1 = plank.width;
       const d_2 = plank.length;
@@ -184,31 +249,30 @@
       const totalEclisses = 6 * Number(plank.quantity);
       const eclisseNormal = totalEclisses - Y1_quantity - Y2_quantity - Y3_quantity;
 
-      return { Y1_length, Y2_length, Y3_length, Y1_quantity, Y2_quantity, Y3_quantity, totalEclisses, eclisseNormal };
+      return {m1, m2, m3, m4, L, delta, a, b, Y1_length, Y2_length, Y3_length, Y1_quantity, Y2_quantity, Y3_quantity, totalEclisses, eclisseNormal };
     }
 
     function calculateLegPlank(plank) {
-      const L = 40;
-      const delta = 10;
-      const X_1 = 4 + L + delta;
-      const X_2 = 5.5 + L + delta;
+      const { L, delta, a } = getVariables();
+      const X_1 = 5.5 + L + delta;
+      const X_2 = 4 + L + delta;
       const G_1 = 3 + L + delta;
-      const G_2 = 5.5 + L + delta;
-      const a = 1000;
+      const G_2 = 3 + L + delta;
 
-      const d_1 = plank.length;
-      const d_2 = plank.width;
+      const d_1 = plank.width;
+      const d_2 = plank.length;
 
       const Y1_length = d_1 - X_1 - X_2;
       const Y2_length = d_2 - G_1 - G_2 - delta - a;
 
       const Y1_quantity = 2 * plank.quantity;
-      const Y2_quantity = plank.quantity;
+      const Y2_quantity = 2 * plank.quantity;
+      const plank_quantity = plank.quantity;
 
-      const totalEclisses = 4 * Number(plank.quantity);
+      const totalEclisses = 6 * Number(plank.quantity);
       const eclisseNormal = totalEclisses - Y1_quantity - Y2_quantity;
 
-      return { Y1_length, Y2_length, Y1_quantity, Y2_quantity, totalEclisses, eclisseNormal };
+      return { L, delta, a, Y1_length, Y2_length, Y1_quantity, plank_quantity, Y2_quantity, totalEclisses, eclisseNormal };
     }
 
     function calculate() {
@@ -238,25 +302,49 @@
 
   // Créez une nouvelle table pour les éclisses
   var eclisseTable = document.createElement("table");
-// Ajoutez une ligne d'en-tête à la table
-var headerRow = eclisseTable.insertRow(-1);
+  var quantityRow = eclisseTable.insertRow(-1);
+    quantityRow.insertCell(0).innerHTML = "<strong> Quantité de "+ plank.type + ": </strong>" + plank.quantity;
+    quantityRow.insertCell(1).innerHTML = "<strong> Quantité d'éclisses: </strong>" + details.totalEclisses;
+
+  if (plank.type === "Porte") {
+    // Create a specific eclisseTable for "Porte"
+    var headerRow = eclisseTable.insertRow(-1);
 headerRow.insertCell(0).innerHTML = "<strong> Type d'éclisse </strong>";
 headerRow.insertCell(1).innerHTML = "<strong> Quantité </strong>" ;
 headerRow.insertCell(2).innerHTML = "<strong>Longueur</strong>";
 
-  // Ajoutez les colonnes pour les types d'éclisses, quantité et longueur
-  var eclisseTypes = ["Toutes mélangées", "Y1", "Y2", "Y3", "Non touchées"];
-  var eclisseQuantities = [details.totalEclisses, details.Y1_quantity, details.Y2_quantity, details.Y3_quantity, details.eclisseNormal];
-  var eclisseLengths = ["-", details.Y1_length, details.Y2_length, details.Y3_length, "-"];
-
-  for (var j = 0; j < eclisseTypes.length; j++) {
+// Ajoutez les colonnes pour les types d'éclisses, quantité et longueur
+var eclisseTypes = ["Y1", "Y2", "Y3", "Non touchées"];
+    var eclisseQuantities = [details.Y1_quantity, details.Y2_quantity, details.Y3_quantity, details.eclisseNormal];
+    var eclisseLengths = [details.Y1_length, details.Y2_length, details.Y3_length, details.a];
     
-    var eclisseRow = eclisseTable.insertRow(-1);
-    eclisseRow.insertCell(0).innerHTML = eclisseTypes[j];
-    eclisseRow.insertCell(1).innerHTML = eclisseQuantities[j];
-    eclisseRow.insertCell(2).innerHTML = eclisseLengths[j];
-  }
+    for (var j = 0; j < 0; j++) {
 
+      var eclisseRow = eclisseTable.insertRow(-1);
+      eclisseRow.insertCell(0).innerHTML = eclisseTypes[j];
+      eclisseRow.insertCell(1).innerHTML = eclisseQuantities[j];
+      eclisseRow.insertCell(2).innerHTML = eclisseLengths[j];
+    }
+
+} else if (plank.type === "Jambe") {
+    // Create a different eclisseTable for "Jambe"
+  var headerRow = eclisseTable.insertRow(-1);
+headerRow.insertCell(0).innerHTML = "<strong> Type d'éclisse </strong>";
+headerRow.insertCell(1).innerHTML = "<strong> Quantité </strong>" ;
+headerRow.insertCell(2).innerHTML = "<strong>Longueur</strong>";
+
+// Ajoutez les colonnes pour les types d'éclisses, quantité et longueur
+var eclisseTypes = ["Y1", "Y2", "Non touchées"];
+    var eclisseQuantities = [details.Y1_quantity, details.Y2_quantity, details.eclisseNormal];
+    var eclisseLengths = [details.Y1_length, details.Y2_length, "-"];
+  }
+  for (var j = 0; j < eclisseTypes.length; j++) {
+      
+      var eclisseRow = eclisseTable.insertRow(-1);
+      eclisseRow.insertCell(0).innerHTML = eclisseTypes[j];
+      eclisseRow.insertCell(1).innerHTML = eclisseQuantities[j];
+      eclisseRow.insertCell(2).innerHTML = eclisseLengths[j];
+    }
   // Ajoutez la table d'éclisses à la deuxième cellule de la ligne
   row.insertCell(1).appendChild(eclisseTable);
 }
