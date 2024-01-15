@@ -50,3 +50,18 @@ main {
 }
 
 
+.Y1 {
+    color: red;
+  }
+  
+  .Y2 {
+    color: orange;
+  }
+  
+  .Y3 {
+    color: lightgreen;
+  }
+  
+  .Non {
+    color: gray;
+  }
